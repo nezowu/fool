@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+LASTCOL=40                              # Last col of game area
+LASTROW=20                              # Last row of game area
+FIRSTROW=3                              # First row of game area
+FIRSTCOL=1                              # First col of game area
+WALLCHAR="X"                            # Character to use for wall
+drawborder() {
+   # Draw top
+   tput setf 6
+   tput cup $FIRSTROW $FIRSTCOL
+   x=$FIRSTCOL
+   while [ "$x" -le "$LASTCOL" ];
+   do
+      printf %b "$WALLCHAR"
+      x=$(( $x + 1 ));
+   done
+
+   # Draw sides
+   x=$FIRSTROW
+   while [ "$x" -le "$LASTROW" ];
+   do
+      tput cup $x $FIRSTCOL; printf %b "$WALLCHAR"
+      tput cup $x $LASTCOL; printf %b "$WALLCHAR"
+      x=$(( $x + 1 ));
+   done
+
+   # Draw bottom
+   tput cup $LASTROW $FIRSTCOL
+   x=$FIRSTCOL
+   while [ "$x" -le "$LASTCOL" ];
+   do
+      printf %b "$WALLCHAR"
+      x=$(( $x + 1 ));
+   done
+   tput setf 9
+}
+tput clear
+drawborder
+#stty -echo

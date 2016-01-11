@@ -1,0 +1,50 @@
+#!/bin/bash
+
+declare -i mouseX
+declare -i mouseY
+declare -i mouseButton
+declare -r ESC_CODE=$'\e'
+declare -r EXIT_CODE='x'
+printMouseInfo() {
+	echo "button=$mouseButton column=$mouseX row=$mouseY" > /dev/pts/1
+}
+
+readMouse() {
+	local mouseButtonData
+	local mouseXData
+	local mouseYData
+	read -r -s -n 1 -t 1 mouseButtonData
+	read -r -s -n 1 -t 1 mouseXData
+	read -r -s -n 1 -t 1 mouseYData
+	local -i mouseButtonCode
+	local -i mouseXCode
+	local -i mouseYCode
+	LC_ALL=C printf -v mouseButtonCode '%d' "'$mouseButtonData"
+	LC_ALL=C printf -v mouseXCode '%d' "'$mouseXData"
+	LC_ALL=C printf -v mouseYCode '%d' "'$mouseYData"
+    	((mouseButton = mouseButtonCode))
+	((mouseX = mouseXCode - 32))
+	((mouseY = mouseYCode - 32))
+}
+
+declare key
+echo -ne "\e[?9h"
+while true; do
+	trap 'echo -ne "\e[?9l"; exit' 2
+	key=""
+	read -r -s -t 1 -n 1 key
+	case "$key" in
+		$EXIT_CODE) 
+			break;;
+		$ESC_CODE) 
+			read -r -s -t 1 -n 1 key
+			if [[ "$key" == '[' ]]; then
+				read -r -s -t 1 -n 1 key
+				if [[ "$key" == "M" ]]; then
+			 		readMouse
+					printMouseInfo
+				fi
+			fi;;
+	esac
+done
+echo -ne "\e[?9l"
