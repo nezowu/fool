@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ##Запишим в переменные ряды карт для одной масти. Через 16 цифр ряд повторяется для следующей масти
-black_card='\U1F0A0'
+blak_card='\U1F0A0'
 number_min=$(bc<<<"ibase=16;1F0A1")
 number_min1=$(bc<<<"ibase=16;1F0A6")
 number_min2=$(bc<<<"ibase=16;1F0AD")
@@ -52,16 +52,16 @@ printColor(){
 			tput setaf 1
 			printf '%b ' "\U$(bc<<<"obase=16;$tin")"
 			tput sgr0
-			[[ -n $2 ]] && break
 		else
 			printf '%b ' "\U$(bc<<<"obase=16;$tin")"
-			[[ -n $2 ]] && break
 		fi
 	done
-#echo
+echo
 }
-#printColor "shuf_card[@]"
-#echo
+printColor "shuf_card[@]"
+tput setaf 4
+echo -e '\U1F0A0'
+tput sgr0
 ##раздаем карты в 3 поля(массива) но предусмотренно еще два "бой" и "полебоя"
 #declare -a shuf_card
 declare -a onestaf
@@ -86,31 +86,15 @@ razdacha(){
 unset i
 }
 razdacha
-#printColor "onestaf[@]"
-#echo
+printColor "onestaf[@]"
 printColor "twostaf[@]"
-echo
 printColor "shuf_card[@]"
-echo
-sleep 3
-tput clear
+#tput clear
 printHead(){
-	tput civis
+	#tput civis
 	#tput cnorm
 	tput cup 2 1
 	tput el
-	printColor "shuf_card[@]" 1
-	if [[ ${#shuf_card[@]} -gt 1 ]]; then
-		tput setaf 4
-		printf '%b' "$black_card"
-		tput sgr0
-	fi
-	tput cup 6 1
-	tput el
-	printColor "onestaf[@]"
+	printColor "shuf_card[@]"
 }
-printHead
-sleep 2
-tput cnorm
-echo
-exit
+#printHead

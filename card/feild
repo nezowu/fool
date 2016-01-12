@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+LASTCOL=$(tput cols)
+LASTROW=$(tput lines)
+#FIRSTROW=3
+#FIRSTCOL=1
+WALLCHAR="X"
+drawLine(){
+	tput cup $1 1 
+	for ((i=1; i<$LASTCOL; i++)); do
+		printf '%b' "$2"
+	done
+}
+#drawborder() {
+#   # Draw top
+#   tput setaf 6
+#   tput cup $FIRSTROW $FIRSTCOL
+#   x=$FIRSTCOL
+#   while [ "$x" -le "$LASTCOL" ];
+#   do
+#      printf %b "$WALLCHAR"
+#      x=$(( $x + 1 ));
+#   done
+#
+#   # Draw sides
+#   #x=$FIRSTROW
+#   #while [ "$x" -le "$LASTROW" ];
+#   #do
+#   #   tput cup $x $FIRSTCOL; printf %b "$WALLCHAR"
+#   #   tput cup $x $LASTCOL; printf %b "$WALLCHAR"
+#   #   x=$(( $x + 1 ));
+#   #done
+#
+#   # Draw bottom
+#   tput cup $LASTROW $FIRSTCOL
+#   x=$FIRSTCOL
+#   while [ "$x" -le "$LASTCOL" ];
+#   do
+#      printf %b "$WALLCHAR"
+#      x=$(( $x + 1 ));
+#   done
+#   tput setaf 9
+#}
+#clear
+#drawborder
+##stty -echo
+clear
+#echo -e '\e[?25l'
+#echo -e '\e[?25h'
+tput civis
+drawLine 4 $WALLCHAR 
+drawLine 16 $WALLCHAR
+tput cup 4 1
+tput el
+tput cnorm

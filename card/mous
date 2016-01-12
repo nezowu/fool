@@ -6,7 +6,7 @@ declare -i mouseButton
 declare -r ESC_CODE=$'\e'
 declare -r EXIT_CODE='x'
 printMouseInfo() {
-	echo "button=$mouseButton column=$mouseX row=$mouseY" > /dev/pts/1
+	echo "button=$mouseButton column=$mouseX row=$mouseY"
 }
 
 readMouse() {
