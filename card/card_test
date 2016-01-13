@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
-IP=$1
-SWITCH=0 #переключатель хода
+flag=0 #переключатель хода
+switch(){
+	(( flag )) && ((flag--)) || ((flag++))
+}
+
+if [[ ! $IP ]]; then
+	coproc nc -l -p 3333
+	#[[ $? ]] && exit
+else
+	coproc nc $1 3333
+	#[[ $? ]] && exit
+fi
+
 ##Запишим в переменные ряды карт для одной масти. Через 16 цифр ряд повторяется для следующей масти
 black_card='\U1F0A0'
 number_min=$(bc<<<"ibase=16;1F0A1")
@@ -127,10 +138,8 @@ printHead(){
 
 }
 printHead
-sleep 2
+#sleep 2
 echo
-#array+=(six) добавить элемент в конец массива
-#${intArray[@]:(-1)}
 echo -en "\e[?9h"
 while true; do
 	read -rsn 6 x
@@ -162,7 +171,9 @@ while true; do
 		onestaf=(${onestaf_tmp[@]})
 		unset onestaf_tmp
 		printHead
-		echo
+		echo "hi" >&${COPROC[1]}
+		#read -u ${COPROC[0]} HELL
+		#echo $HELL
 	else
 		echo "Че за хрень?"
 	fi

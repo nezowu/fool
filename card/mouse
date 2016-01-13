@@ -6,7 +6,7 @@ declare -i mouseButton
 declare -r ESC_CODE=$'\e'
 declare -r EXIT_CODE='x'
 printMouseInfo() {
-	echo "button=$mouseButton column=$mouseX row=$mouseY"
+	echo button=$mouseButton column=$mouseX row=$mouseY
 }
 
 readMouse() {
@@ -30,7 +30,6 @@ readMouse() {
 declare key
 echo -ne "\e[?9h"
 while true; do
-	trap 'echo -ne "\e[?9l"; exit' 2
 	key=""
 	read -r -s -t 1 -n 1 key
 	case "$key" in
