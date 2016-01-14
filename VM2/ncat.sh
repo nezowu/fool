@@ -1,13 +1,43 @@
 #!/usr/bin/env bash
-coproc nc -w 5 localhost $1
-#sleep 2
-#lisn(){
-#	read -u ${COPROC[0]} HELL
-#}
-echo "Прифет нафаня" >&${COPROC[1]}
-while read -u ${COPROC[0]} HELL; do
-	echo $HELL >>mypipe.txt
-done
-echo "Досвиданья Нафаня" >&${COPROC[1]}
-echo "До скорых встреч" >&${COPROC[1]}
-echo "Че еще?" >&${COPROC[1]}
+
+switch(){
+	count=0
+	if [[ $flag == 0 ]]; then
+		flag=1
+		STATUSSTR="Ход партнера"
+	else
+		flag=0
+		STATUSSTR="Ваш ход"
+	fi
+	((count++))
+}
+
+if [[ $2 ]]; then
+	coproc nc -w 5 $1 $2
+	echo "one" >&${COPROC[1]}
+	read -u ${COPROC[0]} STAT
+else
+	coproc nc -l -p $1
+	read -u ${COPROC[0]} STAT 
+	echo "two" >&${COPROC[1]}
+fi
+
+if [[ $STAT == "one" ]]; then
+       	echo "Соединение установлено"
+	STATUSSTR="Ваш ход"
+	flag=0
+elif [[ $STAT == "two" ]]; then
+	echo "Соединение установлено"
+	STATUSSTR="Ход партнера"
+	flag=1
+else
+	echo "Выход"
+	exit
+fi
+echo $STATUSSTR
+switch
+echo $STATUSSTR
+echo $flag
+echo $count
+wait $COPROC_PID && echo "Соединение разорвано"
+exit
