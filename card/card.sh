@@ -1,6 +1,21 @@
 #!/usr/bin/env bash
-IP=$1
-SWITCH=0 #переключатель хода
+IP=$2
+flag=0 #переключатель хода
+#switch(){
+	(( flag )) && ((flag--)) || ((flag++))
+#}
+
+#if [[ ! $IP ]]; then
+#	coproc nc -l -p 3333
+	#[[ $? ]] && exit
+#else
+#	coproc nc $1 3333
+	#[[ $? ]] && exit
+#fi
+tput civis
+stty -icanon
+#Ставим переключатель и делаем рабочим следующий код для первого игрока с меткой flag=0 или 1 параметром
+
 ##Запишим в переменные ряды карт для одной масти. Через 16 цифр ряд повторяется для следующей масти
 black_card='\U1F0A0'
 number_min=$(bc<<<"ibase=16;1F0A1")
@@ -10,7 +25,6 @@ number_min2=$(bc<<<"ibase=16;1F0AD")
 #number_min="$(printf '%b' '\U1F0A1')"
 number_max1=$(bc<<<"ibase=16;1F0AB")
 number_max2=$(bc<<<"ibase=16;1F0AE")
-tput civis
 ##Запишим набор одной масти в асоциативный массив
 z=1
 declare -A monst
@@ -76,6 +90,7 @@ razdacha(){
 unset i
 }
 razdacha
+#Здесь заканчивается переключатель и посылоются готовые массивы для отрисовки партнеру
 tput clear
 battlestaf=(127150 127137)
 printHead(){
@@ -124,49 +139,64 @@ printHead(){
 		tput el
 		printColor ${twostaf[@]}
 	fi
-
+	#Здесь блок кода для вывода строки статуса STATUSSTR по переключателю переход хода
 }
 printHead
-sleep 2
-echo
-#array+=(six) добавить элемент в конец массива
-#${intArray[@]:(-1)}
-echo -en "\e[?9h"
-while true; do
+echo # Cледующий блок кода доступен играющему, ждущий зависает на команде read через пайпы по своему флагу
+# и следующий участок кода переключается просто пока не считает все присланные изменения
+# начнет игру когода получит массивы и отрисует из на экране может стоит отслеживание мышы поднять
+echo -en "\e[?9h" #включаем отслеживание мыши
+while true; do  #главный цикл в котором все и происходит игровой процесс
 	read -rsn 6 x
-	string="$(hexdump -C <<<$x)"
+	string="$(hexdump -C <<<$x)" #конвертируем кракозябки в данные из цифр
 	#echo ${string:19:2}
 	CLICK=${string:19:2}
 	#echo ${string:22:2}${string:25:3}
 	MOUSE=${string:22:2}${string:25:3}
 	X=$((16#${string:22:2}))
 	Y=$((16#${string:25:3}))
+	if [[ $(($X%2)) == 0 ]]; then #карта состоит из двух столбцов объединим это 
+		ZNAK=$((($X-33)/2))
+		#echo $ZNAK
+	else
+		ZNAK=$((($X-34)/2))
+	fi
 	#echo ${string:24:3}
-	#echo -e "$CLICK\n$MOUSE" >>mouse.txt
+	#echo -e "$CLICK\n$MOUSE" >>mouse.txt #здесь мы записывали координаты на стадии отладки
 	#выходим из игры по нажатии СКМ
+	#Сравниваем battlestaf < 11 или не нажата ли правая клавиша на батлстаф - переход хода
+	# или забрал если игрок под номером 2 и отправка к блоку набора карт
+	#правой кнопкой мыши на любую из карт на поле боя
 	[[ $CLICK == 21 ]] && break
-	if [[ $CLICK == 20 && $Y == 47 ]]; then
-		#PROV=$(($X%2))
-		#echo $PROV
-		if [[ $(($X%2)) == 0 ]]; then
-			ZNAK=$((($X-33)/2))
-			echo $ZNAK
-		else
-			ZNAK=$((($X-34)/2))
-		fi
-		[[ ! onestaf[ZNAK] ]] && continue
+	if [[ $CLICK == 20 && $Y == 47 ]]; then #назначаем действиям для мыши действия
+		#if [[ $(($X%2)) == 0 ]]; then #нужно вынести высше 164 строчки
+		#	ZNAK=$((($X-33)/2))
+		#	echo $ZNAK
+		#else
+		#	ZNAK=$((($X-34)/2))
+		#fi
+		[[ ${onestaf[ZNAK]} ]] || continue
 		battlestaf+=(${onestaf[ZNAK]})
 		unset onestaf[ZNAK]
 		onestaf_tmp=(${onestaf[@]})
 		unset onestaf[@]
 		onestaf=(${onestaf_tmp[@]})
 		unset onestaf_tmp
+		#printHead
+		#echo "hi" >&${COPROC[1]}
+		#read -u ${COPROC[0]} HELL
+		#echo $HELL
 		printHead
-		echo
+	#elif [[ battlestaf[ZNAK]
 	else
 		echo "Че за хрень?"
 	fi
+	#Переключаем право хода
+	#Здесь отправляем рабочие массивы от действующего игрока к ожидающему
+	#Cчетчик цикла должен изменится
 done
 echo -en "\e[?9l"
+stty icanon
+#По идее можно поставить ожидание coproc_pid
 tput cvvis
 #tput cnorm
