@@ -1,3 +1,0 @@
-espeak "jeshur raz"
-espeak "ne kartit"
-espeak "mahlah detz"

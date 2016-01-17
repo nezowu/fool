@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+trap 'break' 2
+tput civis
+echo -en "\e[?9h"
+for ((i=0; i<100; i++)); do
+	exec 6>&1
+	exec >/dev/null
+	read -rsn 6 x
+	string="$(hexdump -C <<<$x)" #конвертируем кракозябки в данные из цифр
+	#CLICK=${string:19:2}
+	MOUSE=${string:22:2}${string:25:3}
+	#X=$((16#${string:22:2}))
+	#Y=$((16#${string:25:3}))
+	exec 1>&6 6>&-
+	echo "$MOUSE" | tee -a old_dump.txt
+	unset MOUSE
+done
+tput cvvis
+echo -en "\e[?9l"

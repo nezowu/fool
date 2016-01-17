@@ -1,0 +1,2 @@
+man console_codes
+man bash: «Parameter Expansion»

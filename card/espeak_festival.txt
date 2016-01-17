@@ -1,0 +1,38 @@
+espeak -v f5 "jeshur raz ok"
+espeak -v f5 "neh kartit"
+espeak -v f5 "mahlah detz"
+
+espeak -v f5 "shest urrka"
+espeak -v f5 "sem jurrka"
+espeak -v f5 "was murrka"
+espeak -v f5 "div yartka"
+espeak -v f5 "dis yartka"
+espeak -v f5 "val et"
+espeak -v fr+f5 "darm ma"
+espeak -v es+f5 "ka rol"
+espeak -v fr+f5 "touz"
+espeak -v f5 "kozzyhr cherrvar"
+espeak -v f5 "kozzyhr baubar"
+espeak -v f5 "kozzyhr piki"
+espeak -v f5 "kozzyhr krestya"
+espeak -v es+f5 "nezabudka ! linuxim tochka ru"
+
+eco hi | festival -tts
+echo vser pizdjets | festival --tts
+festival --tts text.txt
+
+#!/bin/bash
+ 
+#This script reads the information from the clipboard outloud.
+ 
+#Look for festival being run.
+running=$(pgrep festival)
+ 
+if [ -z $running ]
+then
+    #read it
+    xclip -o|festival --tts
+else
+    #kill it
+    killall festival;killall aplay;sleep .1;killall aplay
+fi
