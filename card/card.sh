@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 IP=$2
-HEAD="\x6c\x69\x6e\x75\x78\x69\x6d\x2e\x72\x75\x0a"
-battlestaf=(127150 127137) #Временно наполнен
+HEAD='\x6e\x65\x7a\x61\x62\x75\x64\x6b\x61\x0a
+\x6c\x69\x6e\x75\x78\x69\x6d\x2e\x72\x75\x0a'
+#battlestaf=(127150 127137) #Временно наполнен
 black_card='\U1F0A0'
 declare -a onestaf
 declare -a twostaf
@@ -9,7 +10,6 @@ declare -a battlestaf
 declare -a trashstaf
 declare -a shuf_card
 switch(){
-	#flag=$(((flag+1)%2))
 	if [[ $flag == 0 ]]; then
 		STATUSSTR="Ход партнера"
 		flag=1
@@ -46,10 +46,14 @@ printColor(){
 	done
 }
 printHead(){
-	trashstaf=(1 5)
+	#trashstaf=(1 5)
 	tput cup 1 15
 	tput el
-	printf '%s' "$STATUSSTR"
+	if [[ ${#battlestaf[@]} == 10 ]]; then
+		printf '%s' "Сдача"
+	else
+		printf '%s' "$STATUSSTR"
+	fi
 	tput cup 2 1
 	tput el
 	printColor ${shuf_card[@]:0:1}
@@ -81,9 +85,6 @@ printHead(){
 	done
 	tput sgr0
 }
-
-#Ставим переключатель и делаем рабочим следующий код для первого игрока с меткой flag=0 или 1 параметром
-#count=0
 
 if [[ $IP ]]; then
 	coproc nc -w 5 $1 $2
@@ -153,22 +154,63 @@ stty -icanon
 tput clear
 printHead
 while true; do  #главный цикл в котором все и происходит игровой процесс "движок"
-	if [[ $flag == 1 ]]; then
-			echo -en "\e[?9l"
-			read -u ${COPROC[0]} -a twostaf
-			read -u ${COPROC[0]} -a battlestaf
+	if [[ $flag == 1 && ${#battlestaf[@]} != 10 ]]; then
+		echo -en "\e[?9l"
+		read -u ${COPROC[0]} -a twostaf
+		read -u ${COPROC[0]} -a battlestaf
+	elif [[ $flag == 1 && ${#battlestaf[@]} == 10 ]]; then
+		echo -en "\e[?9l"
+		read -u ${COPROC[0]} -a twostaf
+		read -u ${COPROC[0]} -a onestaf
+		read -u ${COPROC[0]} -a battlestaf
+		read -u ${COPROC[0]} -a trashstaf
+		read -u ${COPROC[0]} -a shuf_card
+	elif [[ $flag == 0 && ${#battlestaf[@]} == 10 ]]; then
+		sleep 4
+		trashstaf+=(${battlestaf[@]})
+		battlestaf=()
+		y=$((6-${#onestaf[@]}))
+		if [[ ${#shuf_card[@]} -ge $y ]]; then
+			z=$y
+		else
+			z=${#shuf_card[@]}
+		fi
+		lim=$((${#shuf_card[@]}-z))
+		onestaf+=(${shuf_card[@]:lim})
+		for i in $(seq $z); do
+			unset shuf_card[lim]
+			((lim++))
+		done
+
+		y=$((6-${#twostaf[@]}))
+		if [[ ${#shuf_card[@]} -ge $y ]]; then
+			z=$y
+		else
+			z=${#shuf_card[@]}
+		fi
+		lim=$((${#shuf_card[@]}-z))
+		twostaf+=(${shuf_card[@]:lim})
+		for i in $(seq $z); do
+			unset shuf_card[lim]
+			((lim++))
+		done
+		echo ${onestaf[@]} >&${COPROC[1]}
+		echo ${twostaf[@]} >&${COPROC[1]}
+		echo ${battlestaf[@]} >&${COPROC[1]}
+		echo ${trashstaf[@]} >&${COPROC[1]}
+		echo ${shuf_card[@]} >&${COPROC[1]}	
 	else
 		echo -en "\e[?9h"
 		read -rsn 6 x
 		string="$(hexdump -C <<<$x)" #конвертируем кракозябки в данные из цифр
 		CLICK=${string:19:2}
-		MOUSE=${string:22:2}${string:25:3}
+		#MOUSE=${string:22:2}${string:25:3}
 		X=$((16#${string:22:2}))
 		Y=$((16#${string:25:3}))
-		if [[ $(($X%2)) == 0 ]]; then #карта состоит из двух столбцов объединим это 
-			ZNAK=$((($X-33)/2))
+		if [[ $((X%2)) == 0 ]]; then #карта состоит из двух столбцов объединим это 
+			ZNAK=$(((X-33)/2))
 		else
-			ZNAK=$((($X-34)/2))
+			ZNAK=$(((X-34)/2))
 		fi
 		#echo -e "$CLICK\n$MOUSE" >>mouse.txt #здесь мы записывали координаты на стадии отладки
 		#Сравниваем battlestaf < 11 или не нажата ли правая клавиша на батлстаф - переход хода
@@ -184,6 +226,7 @@ while true; do  #главный цикл в котором все и проис�
 		unset onestaf_tmp
 		echo ${onestaf[@]} >&${COPROC[1]}
 		echo ${battlestaf[@]} >&${COPROC[1]}
+
 	fi
 	switch
 	printHead
@@ -194,3 +237,4 @@ tput cvvis
 tput clear
 echo -e $HEAD 
 #tput cnorm
+exit
