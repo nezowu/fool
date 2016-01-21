@@ -176,73 +176,59 @@ while true; do  #главный цикл в котором все и проис�
 				read -u ${COPROC[0]} -a trashstaf
 				read -u ${COPROC[0]} -a shuf_card
 		fi
-#	if [[ $flag == 0 && ${#battlestaf[@]} != 10 ]] && [[ $spich ]]; then
-#		sleep 4
-#		if [[ $spich == 1 ]]; then
-#			trashstaf+=(${battlestaf[@]})
-#			battlestaf=()
-#			y=$((6-${#onestaf[@]}))
-#			if [[ ${#shuf_card[@]} -ge $y ]]; then
-#				z=$y
-#			else
-#				z=${#shuf_card[@]}
-#			fi
-#			lim=$((${#shuf_card[@]}-z))
-#			onestaf+=(${shuf_card[@]:lim})
-#			for i in $(seq $z); do
-#				unset shuf_card[lim]
-#				((lim++))
-#			done
-#
-#			y=$((6-${#twostaf[@]}))
-#			if [[ ${#shuf_card[@]} -ge $y ]]; then
-#				z=$y
-#			else
-#				z=${#shuf_card[@]}
-#			fi
-#			lim=$((${#shuf_card[@]}-z))
-#			twostaf+=(${shuf_card[@]:lim})
-#			for i in $(seq $z); do
-#				unset shuf_card[lim]
-#				((lim++))
-#			done
-#		elif [[ $spich == 2 ]]; then
-#			onestaf+=(${battlestaf[@]})
-#			battlestaf=()
-#			#y=$((6-${#onestaf[@]}))
-#			#if [[ ${#shuf_card[@]} -ge $y ]]; then
-#			#	z=$y
-#			#else
-#			#	z=${#shuf_card[@]}
-#			#fi
-#			#lim=$((${#shuf_card[@]}-z))
-#			#onestaf+=(${shuf_card[@]:lim})
-#			#for i in $(seq $z); do
-#			#	unset shuf_card[lim]
-#			#	((lim++))
-#			#done
-#
-#			y=$((6-${#twostaf[@]}))
-#			if [[ ${#shuf_card[@]} -ge $y ]]; then
-#				z=$y
-#			else
-#				z=${#shuf_card[@]}
-#			fi
-#			lim=$((${#shuf_card[@]}-z))
-#			twostaf+=(${shuf_card[@]:lim})
-#			for i in $(seq $z); do
-#				unset shuf_card[lim]
-#				((lim++))
-#			done
-#		fi
-#		unset spich
-#		echo "1" >&${COPROC[1]}
-#		echo ${onestaf[@]} >&${COPROC[1]}
-#		echo ${twostaf[@]} >&${COPROC[1]}
-#		echo ${battlestaf[@]} >&${COPROC[1]}
-#		echo ${trashstaf[@]} >&${COPROC[1]}
-#		echo ${shuf_card[@]} >&${COPROC[1]}	
-#	fi
+	elif [[ $flag == 0 && ${#battlestaf[@]} != 10 ]] && [[ $spich ]]; then
+		sleep 4
+		if [[ $spich == 1 ]]; then
+			trashstaf+=(${battlestaf[@]})
+			battlestaf=()
+			y=$((6-${#onestaf[@]}))
+			if [[ ${#shuf_card[@]} -ge $y ]]; then
+				z=$y
+			else
+				z=${#shuf_card[@]}
+			fi
+			lim=$((${#shuf_card[@]}-z))
+			onestaf+=(${shuf_card[@]:lim})
+			for i in $(seq $z); do
+				unset shuf_card[lim]
+				((lim++))
+			done
+
+			y=$((6-${#twostaf[@]}))
+			if [[ ${#shuf_card[@]} -ge $y ]]; then
+				z=$y
+			else
+				z=${#shuf_card[@]}
+			fi
+			lim=$((${#shuf_card[@]}-z))
+			twostaf+=(${shuf_card[@]:lim})
+			for i in $(seq $z); do
+				unset shuf_card[lim]
+				((lim++))
+			done
+		elif [[ $spich == 2 ]]; then
+			onestaf+=(${battlestaf[@]})
+			battlestaf=()
+			y=$((6-${#twostaf[@]}))
+			if [[ ${#shuf_card[@]} -ge $y ]]; then
+				z=$y
+			else
+				z=${#shuf_card[@]}
+			fi
+			lim=$((${#shuf_card[@]}-z))
+			twostaf+=(${shuf_card[@]:lim})
+			for i in $(seq $z); do
+				unset shuf_card[lim]
+				((lim++))
+			done
+		fi
+		unset spich
+		echo "1" >&${COPROC[1]}
+		echo ${onestaf[@]} >&${COPROC[1]}
+		echo ${twostaf[@]} >&${COPROC[1]}
+		echo ${battlestaf[@]} >&${COPROC[1]}
+		echo ${trashstaf[@]} >&${COPROC[1]}
+		echo ${shuf_card[@]} >&${COPROC[1]}	
 	elif [[ $flag == 0 && ${#battlestaf[@]} == 10 ]] && [[ ! $spich ]]; then
 		sleep 4
 		trashstaf+=(${battlestaf[@]})
@@ -291,29 +277,23 @@ while true; do  #главный цикл в котором все и проис�
 		else
 			ZNAK=$(((X-34)/2))
 		fi
-		#echo -e "$CLICK\n$MOUSE" >>mouse.txt #здесь мы записывали координаты на стадии отладки
-		#Сравниваем battlestaf < 11 или не нажата ли правая клавиша на батлстаф - переход хода
-		# или забрал если игрок под номером 2 и отправка к блоку набора карт
-		#правой кнопкой мыши на любую из карт на поле боя
-		#echo "$CLICK $Y" >> tosot.txt
 		if [[ $CLICK == 21 ]]; then
 			echo "0" >&${COPROC[1]}
 			echo ${twostaf_back[@]} >&${COPROC[1]}
 			echo ${battlestaf_back[@]} >&${COPROC[1]}
 			battlestaf=(${battlestaf_back[@]})
 			twostaf=(${onestaf_back[@]})
-		elif [[ $ClICK == 22 && $Y == 43 ]]; then
+		elif [[ $CLICK == 22 && $Y == 43 ]]; then
 			((ZNAK-=7))
-			echo "$CLICK $Y" >> tosot.txt
 			[[ ${battlestaf[ZNAK]} ]] || continue
-			if [[ $((${#battlestaf[@]}%2)) == 0 ]]; then 
-				#spich=1
-				#continue
-				exit
-			elif [[ $((${#battlestaf[@]}%2)) == 1 ]]; then
-				#spich=2
-				#continue
-				exit
+			if [[ $(( ${#battlestaf[@]} % 2 )) == 0 ]]; then 
+				echo "$CLICK $Y" >> tosot.txt
+				spich=1
+				continue
+			elif [[ $(( ${#battlestaf[@]} % 2 )) == 1 ]]; then
+				echo "$CLICK $Y" >> tosot.txt
+				spich=2
+				continue
 			fi
 		else
 			[[ $CLICK == 20 && $Y == 47 ]] || continue
