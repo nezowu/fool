@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
+trap 'break' 2
+#while true; do
 IP=$2
 HEAD='\x6e\x65\x7a\x61\x62\x75\x64\x6b\x61\x0a
 \x6c\x69\x6e\x75\x78\x69\x6d\x2e\x72\x75\x0a'
-#battlestaf=(127150 127137) #Временно наполнен
 black_card='\U1F0A0'
 declare -a onestaf
 declare -a twostaf
@@ -46,7 +47,6 @@ printColor(){
 	done
 }
 printHead(){
-	#trashstaf=(1 5)
 	tput cup 1 15
 	tput el
 	if [[ ${#battlestaf[@]} == 10 ]]; then
@@ -156,7 +156,13 @@ printHead
 while true; do  #главный цикл в котором все и происходит игровой процесс "движок"
 	if [[ $flag == 1 && ${#battlestaf[@]} != 10 ]]; then
 		echo -en "\e[?9l"
+		twostaf_back=(${twostaf[@]})
+		battlestaf_back=(${battlestaf[@]})
 		read -u ${COPROC[0]} -a twostaf
+		if [[ ${twostaf[@]} == ${onestaf_back[@]} ]]; then
+			onestaf=(${twostaf[@]})
+			twostaf=(${twostaf_back[@]})
+		fi
 		read -u ${COPROC[0]} -a battlestaf
 	elif [[ $flag == 1 && ${#battlestaf[@]} == 10 ]]; then
 		echo -en "\e[?9l"
@@ -216,25 +222,44 @@ while true; do  #главный цикл в котором все и проис�
 		#Сравниваем battlestaf < 11 или не нажата ли правая клавиша на батлстаф - переход хода
 		# или забрал если игрок под номером 2 и отправка к блоку набора карт
 		#правой кнопкой мыши на любую из карт на поле боя
-		[[ $CLICK == 21 ]] && break #выход из игры
-		[[ $CLICK == 20 && $Y == 47 ]] || continue
-		[[ ${onestaf[ZNAK]} ]] || continue
-		battlestaf+=(${onestaf[ZNAK]})
-		unset onestaf[ZNAK]
-		onestaf_tmp=(${onestaf[@]})
-		onestaf=(${onestaf_tmp[@]})
-		unset onestaf_tmp
-		echo ${onestaf[@]} >&${COPROC[1]}
-		echo ${battlestaf[@]} >&${COPROC[1]}
-
+		if [[ $CLICK == 21 ]]; then
+			echo ${twostaf_back[@]} >&${COPROC[1]}
+			echo ${battlestaf_back[@]} >&${COPROC[1]}
+			battlestaf=(${battlestaf_back[@]})
+			twostaf=(${onestaf_back[@]})
+		elif [[ $ClICK == 22 && $Y == 43 ]]; then
+			((ZNAK-=7))
+			[[ ${battlestaf[ZNAK]} ]] || continue
+			if [[ $((${#battlestaf[@]}%2)) == 0 ]]; then 
+				FLAG=2
+				continue
+			elif [[ $((${#battlestaf[@]}%2)) == 1 ]]; then
+				FLAG=1
+				continue
+			fi
+		else
+			[[ $CLICK == 20 && $Y == 47 ]] || continue
+			[[ ${onestaf[ZNAK]} ]] || continue
+			onestaf_back=(${onestaf[@]})
+			battlestaf+=(${onestaf[ZNAK]})
+			unset onestaf[ZNAK]
+			onestaf_tmp=(${onestaf[@]})
+			onestaf=(${onestaf_tmp[@]})
+			echo ${onestaf[@]} >&${COPROC[1]}
+			echo ${battlestaf[@]} >&${COPROC[1]}
+		fi
 	fi
 	switch
 	printHead
+	if [[ ${#onestaf[@]} == 0 || ${#twostaf[@]} == 0 ]] && [[ ${#shuf_card[@]} == 0 ]]; then
+		sleep 3
+		break
+	fi
 done
-echo -en "\e[?9l" #надо в дальнейшем выключить только для оставшегося
+echo -en "\e[?9l"
 stty icanon
 tput cvvis
 tput clear
 echo -e $HEAD 
-#tput cnorm
+#done
 exit
