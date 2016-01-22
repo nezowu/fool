@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-trap 'break' 2
 #while true; do
 IP=$2
 HEAD='\x6e\x65\x7a\x61\x62\x75\x64\x6b\x61\x0a
@@ -129,14 +128,12 @@ if [[ $flag == 0 ]]; then
 			((monst[$y]+=16))
 		done
 	done
-	
 	##Перемешаем колоду
 	s=0
 	for p in $(shuf -i 0-35); do
 		shuf_card[p]=${arrvar[@]:s:1}
 		((s+=1))
 	done
-	
 	##раздаем карты в 2 поля(массива) но предусмотренно еще два "бой" и "полебоя"
 	razdacha
 	echo ${onestaf[@]} >&${COPROC[1]}
@@ -154,24 +151,45 @@ stty -icanon
 tput clear
 printHead
 while true; do  #главный цикл в котором все и происходит игровой процесс "движок"
-	if [[ $flag == 1 && ${#battlestaf[@]} != 10 ]]; then
+	trap 'break' 2
+	if [[ $flag == 1 ]]; then
 		echo -en "\e[?9l"
-		twostaf_back=(${twostaf[@]})
-		battlestaf_back=(${battlestaf[@]})
-		read -u ${COPROC[0]} -a twostaf
-		if [[ ${twostaf[@]} == ${onestaf_back[@]} ]]; then
-			onestaf=(${twostaf[@]})
-			twostaf=(${twostaf_back[@]})
+		read -u ${COPROC[0]} FLAG
+		if [[ $FLAG == 0 ]]; then
+			twostaf_back=(${twostaf[@]})
+			battlestaf_back=(${battlestaf[@]})
+			read -u ${COPROC[0]} -a twostaf
+			if [[ ${twostaf[@]} == ${onestaf_back[@]} ]]; then
+				onestaf=(${twostaf[@]})
+				twostaf=(${twostaf_back[@]})
+			fi
+			read -u ${COPROC[0]} -a battlestaf
+			#FLAG=0
+		elif [[ $FLAG == 1 ]]; then
+			:
+			#continue
+		elif [[ $FLAG == 2 ]]; then
+			:
+			#continue
+		elif [[ $FLAG == 3 ]]; then
+			if [[  ${#battlestaf[@]} == 10 ]]; then
+				read -u ${COPROC[0]} -a twostaf
+				read -u ${COPROC[0]} -a onestaf
+				read -u ${COPROC[0]} -a battlestaf
+				read -u ${COPROC[0]} -a trashstaf
+				read -u ${COPROC[0]} -a shuf_card
+			else
+				read -u ${COPROC[0]} -a twostaf
+				read -u ${COPROC[0]} -a onestaf
+				read -u ${COPROC[0]} -a battlestaf
+				read -u ${COPROC[0]} -a trashstaf
+				read -u ${COPROC[0]} -a shuf_card
+				#printHead
+				#continue
+				switch
+			fi
 		fi
-		read -u ${COPROC[0]} -a battlestaf
-	elif [[ $flag == 1 && ${#battlestaf[@]} == 10 ]]; then
-		echo -en "\e[?9l"
-		read -u ${COPROC[0]} -a twostaf
-		read -u ${COPROC[0]} -a onestaf
-		read -u ${COPROC[0]} -a battlestaf
-		read -u ${COPROC[0]} -a trashstaf
-		read -u ${COPROC[0]} -a shuf_card
-	elif [[ $flag == 0 && ${#battlestaf[@]} == 10 ]]; then
+	elif [[ $flag == 0 && ${#battlestaf[@]} != 10 ]] && [[ $FLAG == 1 ]]; then #бита
 		sleep 4
 		trashstaf+=(${battlestaf[@]})
 		battlestaf=()
@@ -200,17 +218,80 @@ while true; do  #главный цикл в котором все и проис�
 			unset shuf_card[lim]
 			((lim++))
 		done
+		echo "3" >&${COPROC[1]}
 		echo ${onestaf[@]} >&${COPROC[1]}
 		echo ${twostaf[@]} >&${COPROC[1]}
 		echo ${battlestaf[@]} >&${COPROC[1]}
 		echo ${trashstaf[@]} >&${COPROC[1]}
-		echo ${shuf_card[@]} >&${COPROC[1]}	
+		echo ${shuf_card[@]} >&${COPROC[1]}
+		FLAG=0
+		switch
+	elif [[ $flag == 0 && ${#battlestaf[@]} != 10 ]] && [[ $FLAG == 2 ]]; then #забрал
+		twostaf+=(${battlestaf[@]})
+		battlestaf=()
+		y=$((6-${#onestaf[@]}))
+		if [[ ${#shuf_card[@]} -ge $y ]]; then
+			z=$y
+		else
+			z=${#shuf_card[@]}
+		fi
+		lim=$((${#shuf_card[@]}-z))
+		onestaf+=(${shuf_card[@]:lim})
+		for i in $(seq $z); do
+			unset shuf_card[lim]
+			((lim++))
+		done
+		echo "3" >&${COPROC[1]}
+		echo ${onestaf[@]} >&${COPROC[1]}
+		echo ${twostaf[@]} >&${COPROC[1]}
+		echo ${battlestaf[@]} >&${COPROC[1]}
+		echo ${trashstaf[@]} >&${COPROC[1]}
+		echo ${shuf_card[@]} >&${COPROC[1]}
+		FLAG=0
+		#printHead
+		#continue
+		switch
+	elif [[ $flag == 0 && ${#battlestaf[@]} == 10 ]] && [[ $FLAG == 0 ]]; then
+		sleep 4
+		trashstaf+=(${battlestaf[@]})
+		battlestaf=()
+		y=$((6-${#onestaf[@]}))
+		if [[ ${#shuf_card[@]} -ge $y ]]; then
+			z=$y
+		else
+			z=${#shuf_card[@]}
+		fi
+		lim=$((${#shuf_card[@]}-z))
+		onestaf+=(${shuf_card[@]:lim})
+		for i in $(seq $z); do
+			unset shuf_card[lim]
+			((lim++))
+		done
+
+		y=$((6-${#twostaf[@]}))
+		if [[ ${#shuf_card[@]} -ge $y ]]; then
+			z=$y
+		else
+			z=${#shuf_card[@]}
+		fi
+		lim=$((${#shuf_card[@]}-z))
+		twostaf+=(${shuf_card[@]:lim})
+		for i in $(seq $z); do
+			unset shuf_card[lim]
+			((lim++))
+		done
+		echo "3" >&${COPROC[1]}
+		echo ${onestaf[@]} >&${COPROC[1]}
+		echo ${twostaf[@]} >&${COPROC[1]}
+		echo ${battlestaf[@]} >&${COPROC[1]}
+		echo ${trashstaf[@]} >&${COPROC[1]}
+		echo ${shuf_card[@]} >&${COPROC[1]}
 	else
 		echo -en "\e[?9h"
 		read -rsn 6 x
 		string="$(hexdump -C <<<$x)" #конвертируем кракозябки в данные из цифр
 		CLICK=${string:19:2}
-		#MOUSE=${string:22:2}${string:25:3}
+		MOUSE=${string:22:2}${string:25:3}
 		X=$((16#${string:22:2}))
 		Y=$((16#${string:25:3}))
 		if [[ $((X%2)) == 0 ]]; then #карта состоит из двух столбцов объединим это 
@@ -218,15 +299,27 @@ while true; do  #главный цикл в котором все и проис�
 		else
 			ZNAK=$(((X-34)/2))
 		fi
-		#echo -e "$CLICK\n$MOUSE" >>mouse.txt #здесь мы записывали координаты на стадии отладки
-		#Сравниваем battlestaf < 11 или не нажата ли правая клавиша на батлстаф - переход хода
-		# или забрал если игрок под номером 2 и отправка к блоку набора карт
-		#правой кнопкой мыши на любую из карт на поле боя
 		if [[ $CLICK == 21 ]]; then
+			echo "0" >&${COPROC[1]}
 			echo ${twostaf_back[@]} >&${COPROC[1]}
 			echo ${battlestaf_back[@]} >&${COPROC[1]}
 			battlestaf=(${battlestaf_back[@]})
 			twostaf=(${onestaf_back[@]})
+			#FLAG=0
+		elif [[ $CLICK == 22 && $Y == 43 ]]; then
+			((ZNAK-=7))
+			[[ ${battlestaf[ZNAK]} ]] || continue
+			if [[ $(( ${#battlestaf[@]} % 2 )) == 0 ]]; then 
+				echo "1" >&${COPROC[1]}
+				#echo ${onestaf[@]} >&${COPROC[1]}
+				#echo ${battlestaf[@]} >&${COPROC[1]}
+				#FLAG=1
+			elif [[ $(( ${#battlestaf[@]} % 2 )) == 1 ]]; then
+				echo "2" >&${COPROC[1]}
+				#echo ${onestaf[@]} >&${COPROC[1]}
+				#echo ${battlestaf[@]} >&${COPROC[1]}
+				#FLAG=2
+			fi
 		else
 			[[ $CLICK == 20 && $Y == 47 ]] || continue
 			[[ ${onestaf[ZNAK]} ]] || continue
@@ -235,8 +328,10 @@ while true; do  #главный цикл в котором все и проис�
 			unset onestaf[ZNAK]
 			onestaf_tmp=(${onestaf[@]})
 			onestaf=(${onestaf_tmp[@]})
+			echo "0" >&${COPROC[1]}
 			echo ${onestaf[@]} >&${COPROC[1]}
 			echo ${battlestaf[@]} >&${COPROC[1]}
+			#FLAG=0
 		fi
 	fi
 	switch
